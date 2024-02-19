@@ -48,9 +48,6 @@ STATUS Dumper::Init(int argc, char *argv[]) {
     };
   }
 
-  if (!ReaderInit(pid)) {
-    return STATUS::READER_ERROR;
-  };
 
   fs::path processName;
 
@@ -61,6 +58,9 @@ STATUS Dumper::Init(int argc, char *argv[]) {
     printf("Found UE4 game: %ls\n", processName.c_str());
   }
 
+  if (!ReaderInit(pid, (wchar_t*)processName.c_str())) {
+	  return STATUS::READER_ERROR;
+  };
   {
     auto root = fs::path(argv[0]);
     root.remove_filename();

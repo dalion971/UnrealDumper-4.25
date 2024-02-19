@@ -10,6 +10,6 @@ template <typename T> T Read(void *address) {
   return buffer;
 }
 
-bool ReaderInit(uint32 pid);
+bool ReaderInit(uint32 pid, wchar_t* module_name = nullptr);
 
 uint64 GetImageSize();

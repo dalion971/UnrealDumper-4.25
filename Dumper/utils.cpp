@@ -2,6 +2,7 @@
 #include <winternl.h>
 #include "memory.h"
 #include "utils.h"
+#include <TlHelp32.h>
 
 bool Compare(uint8* data, uint8 *sig, uint32 size) {
   for (uint32 i = 0; i < size; i++) {
@@ -44,10 +45,33 @@ void IterateExSections(void* data, std::function<bool(void*, void*)> callback) {
 }
 
 uint32 GetProccessPath(uint32 pid, wchar_t* processName, uint32 size) {
+#ifdef DRV
+	HANDLE hSnapshot = CreateToolhelp32Snapshot(TH32CS_SNAPPROCESS, 0);
+	if (hSnapshot == INVALID_HANDLE_VALUE) {
+		printf("Failed to create process snapshot. Error code: %u\n", GetLastError());
+		return 1;
+	}
+
+	PROCESSENTRY32W processEntry;
+	processEntry.dwSize = sizeof(PROCESSENTRY32W);
+	if (Process32FirstW(hSnapshot, &processEntry)) {
+		do {
+			if (processEntry.th32ProcessID == pid) {
+				processName = processEntry.szExeFile;
+				size = processEntry.dwSize;
+				break;
+			}
+		} while (Process32NextW(hSnapshot, &processEntry));
+	}
+
+	CloseHandle(hSnapshot);
+	return size;
+#else
   HANDLE hProcess = OpenProcess(PROCESS_QUERY_LIMITED_INFORMATION, 0, pid);
   if (!QueryFullProcessImageNameW(hProcess, 0, processName, (DWORD*)(&size))) size = 0;
   CloseHandle(hProcess);
   return size;
+#endif
 }
 
 uint64 GetTime() {
